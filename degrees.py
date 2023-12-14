@@ -92,8 +92,52 @@ def shortest_path(source, target):
     If no possible path, returns None.
     """
 
-    # TODO
-    raise NotImplementedError
+    root = Node( source, None, None )
+
+    frontier = QueueFrontier( )
+    frontier.add( root )
+
+    # List of already visited people
+    visited = [ source ]
+
+    # Solution list
+    solution = [ ]
+
+    while not frontier.empty( ):
+        node = frontier.remove( )
+
+        name = people[ node.state ][ "name" ]
+        print( f"  CHECKING: { name }" )
+
+        neighbours = neighbors_for_person( node.state )
+        for i in neighbours:
+            person_id = i[ 1 ]
+            movie_id  = i[ 0 ]
+
+            if person_id == target:
+                print( "FOUND SOLUTION!" )
+                solution.append( i )
+
+                n = node
+                while n.parent != None:
+                    solution.insert( 0, ( n.action, n.state ) )
+                    n = n.parent
+
+                return solution
+
+            if any( x == person_id for x in visited ):
+                continue
+
+            name = people[ person_id ][ "name" ]
+            print( f"  ADDING: { name }" )
+
+            new_node = Node( person_id, node, movie_id )
+            frontier.add( new_node )
+            visited.append( person_id )
+
+    # We got to the end of the frontier, so no solution is found
+    if frontier.empty( ):
+        return None
 
 
 def person_id_for_name(name):
