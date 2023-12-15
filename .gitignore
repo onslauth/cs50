@@ -1,0 +1,6 @@
+# Ignore pycache directory
+__pycache__/
+
+# Ignore vim temp files:
+*.swp
+*.swo
