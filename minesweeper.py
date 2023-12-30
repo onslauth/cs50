@@ -91,41 +91,139 @@ class Sentence():
     and a count of the number of those cells which are mines.
     """
 
-    def __init__(self, cells, count):
+    def __init__(self, cells, count, f):
+        print( f"\nSentence( { cells }, { count } )" )
         self.cells = set(cells)
         self.count = count
+
+        self.mines = set( )
+        self.safes = set( )
+
+        self.cell = None
+
+        self.f = f
+
+        self.f.write( f"\nSentence( { cells }, { count } )\n" )
+        self.f.flush( )
+
+        if self.count == 0:
+            self.safes.update( self.cells )
+            self.cells = set( )
+            print( "  count == 0, all cells safe" )
+            print( f"  self.cells: { self.cells }" )
+            print( f"  self.safes: { self.safes }" )
+            print( f"  self.mines: { self.mines }" )
+
+            self.f.write( "  count == 0, all cells safe\n" )
+            self.f.write( f"  self.cells: { self.cells }\n" )
+            self.f.write( f"  self.safes: { self.safes }\n" )
+            self.f.write( f"  self.mines: { self.mines }\n" )
+            self.f.flush( )
+
+        if len( cells ) == count:
+            self.mines.update( self.cells )
+            self.cells = set( )
+            print( "  len( cells ) == count, all cells mines" )
+            print( f"  self.cells: { self.cells }" )
+            print( f"  self.safes: { self.safes }" )
+            print( f"  self.mines: { self.mines }" )
+
+
+            self.f.write( "  len( cells ) == count, all cells mines\n" )
+            self.f.write( f"  self.cells: { self.cells }\n" )
+            self.f.write( f"  self.safes: { self.safes }\n" )
+            self.f.write( f"  self.mines: { self.mines }\n" )
+            self.f.flush( )
+
+
 
     def __eq__(self, other):
         return self.cells == other.cells and self.count == other.count
 
     def __str__(self):
-        return f"{self.cells} = {self.count}"
+        return f"Sentence: {self.cells} = {self.count}\n  original_cell: { self.cell }\n  safes: { self.safes }\n  mines: { self.mines }"
 
     def known_mines(self):
         """
         Returns the set of all cells in self.cells known to be mines.
         """
-        raise NotImplementedError
+        return self.mines
 
     def known_safes(self):
         """
         Returns the set of all cells in self.cells known to be safe.
         """
-        raise NotImplementedError
+        return self.safes
 
     def mark_mine(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
-        raise NotImplementedError
+        if cell not in self.cells:
+            return
+
+        print( f"\nmark_mine: { cell }" )
+        self.f.write( f"\nmark_mine: { cell }\n" )
+        self.f.flush( )
+
+        self.mines.add( cell )
+        self.cells.remove( cell )
+
+        if len( self.mines ) == self.count:
+            print( f"  remaining sentence is all safes:" )
+            print( f"    self.mines: { self.mines }" )
+            print( f"    self.safes: { self.safes }" )
+            print( f"    self.cells: { self.cells }" )
+            print( f"    self.count: { self.count }" )
+            print( "" )
+
+            self.f.write( f"  remaining sentence is all safes:\n" )
+            self.f.write( f"    self.mines: { self.mines }\n" )
+            self.f.write( f"    self.safes: { self.safes }\n" )
+            self.f.write( f"    self.cells: { self.cells }\n" )
+            self.f.write( f"    self.count: { self.count }\n" )
+            self.f.write( "" )
+            self.f.flush( )
+
+            self.safes.update( self.cells )
+            self.cells = set( )
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-        raise NotImplementedError
+
+        if cell not in self.cells:
+            return
+
+        print( f"\nmark_safe: { cell }" )
+        self.f.write( f"\nmark_safe: { cell }\n" )
+        self.f.flush( )
+
+        self.safes.add( cell )
+        self.cells.remove( cell )
+
+        if len( self.cells ) + len( self.mines ) == self.count:
+
+            print( f"  remaining sentence is all mines:" )
+            print( f"    self.mines: { self.mines }" )
+            print( f"    self.safes: { self.safes }" )
+            print( f"    self.cells: { self.cells }" )
+            print( f"    self.count: { self.count }" )
+            print( "" )
+
+            self.f.write( f"  remaining sentence is all mines:\n" )
+            self.f.write( f"    self.mines: { self.mines }\n" )
+            self.f.write( f"    self.safes: { self.safes }\n" )
+            self.f.write( f"    self.cells: { self.cells }\n" )
+            self.f.write( f"    self.count: { self.count }\n" )
+            self.f.write( "" )
+            self.f.flush( )
+
+            self.mines.update( self.cells )
+            self.cells = set( )
 
 
 class MinesweeperAI():
@@ -149,6 +247,8 @@ class MinesweeperAI():
         # List of sentences about the game known to be true
         self.knowledge = []
 
+        self.f = open( "log.txt", "w" )
+
     def mark_mine(self, cell):
         """
         Marks a cell as a mine, and updates all knowledge
@@ -168,6 +268,15 @@ class MinesweeperAI():
             sentence.mark_safe(cell)
 
     def add_knowledge(self, cell, count):
+        print( f"\nadd_knowledge:" )
+        print( f"  cell:  { cell }" )
+        print( f"  count: { count }" )
+
+        self.f.write( f"\nadd_knowledge:\n" )
+        self.f.write( f"  cell:  { cell }\n" )
+        self.f.write( f"  count: { count }\n" )
+        self.f.flush( )
+
         """
         Called when the Minesweeper board tells us, for a given
         safe cell, how many neighboring cells have mines in them.
@@ -182,7 +291,250 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        raise NotImplementedError
+        #1 Mark the cell as a move
+        self.moves_made.add( cell )
+        print( "\nAdded cell to moves_made" )
+        print( f"  self.moves_made: { self.moves_made }" )
+
+        self.f.write( "\nAdded cell to moves_made" )
+        self.f.write( f"  self.moves_made: { self.moves_made }\n" )
+        self.f.flush( )
+
+        #2.0 Mark the cell as safe
+        self.safes.add( cell )
+        print( "\nAdded cell to safes" )
+        print( f"  self.safes: { self.safes }" )
+
+        self.f.write( "\nAdded cell to safes" )
+        self.f.write( f"  self.safes: { self.safes }\n" )
+        self.f.flush( )
+
+        #2.1 Update sentences and mark cell as safe
+        print( f"Updating knowledge with safe cell {cell}" )
+        self.f.write( f"Updating knowledge with safe cell {cell}\n" )
+        self.f.flush( )
+        self.update_knowledge_with_safe( cell )
+        self.find_and_mark_new_known_cells( )
+
+        #2.2 Add new sentence if not empty
+        new_cells, new_count = self.create_new_cells( cell, count )
+
+        if len( new_cells ) == 0:
+            print( "\nNew sentence is empty" )
+            self.f.write( "\nNew sentence is empty\n" )
+            self.f.flush( )
+        else:
+            print( "\nAdding new sentence:" )
+            self.f.write( "\nAdding new sentence:\n" )
+            self.f.flush( )
+            sentence = Sentence( new_cells, new_count, self.f )
+            sentence.cell = cell
+            print( sentence )
+            self.f.write( str( sentence ) )
+            self.f.flush( )
+            self.knowledge.append( sentence )
+            self.find_and_mark_new_known_cells( )
+
+        self.infer_new_sentences( )
+        self.find_and_mark_new_known_cells( )
+
+    def infer_new_sentences( self ):
+        print( "\ninfer_new_sentences:" )
+        self.f.write( "\ninfer_new_sentences:\n" )
+        self.f.flush( )
+
+        if len( self.knowledge ) <= 1:
+            print( "  len( knowledge ) <= 1, returning" )
+            self.f.write( "  len( knowledge ) <= 1, returning\n" )
+            self.f.flush( )
+            return
+
+        s = self.knowledge[ -1 ]
+        print( f"  s:" )
+        print( s )
+
+        self.f.write( f"  s:\n" )
+        self.f.write( str( s ) )
+        self.f.flush( )
+
+        if len( s.cells ) == 0:
+            return
+
+        for i in range( 0, len( self.knowledge ) - 1 ):
+            print( f"\n  i: { i }" )
+            self.f.write( f"\n  i: { i }\n" )
+            self.f.flush( )
+            k = self.knowledge[ i ]
+            print( "  k:" )
+            print( k )
+
+            self.f.write( "  k:\n" )
+            self.f.write( str( k ) )
+            self.f.flush( )
+
+            if s.cells.issubset( k.cells ):
+                print( "  S is SUBSET of K" )
+                self.f.write( "  S is SUBSET of K\n" )
+                self.f.flush( )
+                subset = k.cells - s.cells
+                count  = ( k.count - len( k.mines ) ) - ( s.count - len( s.mines ) )
+
+                if len( subset ) == 0:
+                    print( "  len( subset ) == 0, continuing" )
+                    self.f.write( "  len( subset ) == 0, continuing\n" )
+                    self.f.flush( )
+                    continue
+
+                print( "  subset is valid" )
+
+                sentence = Sentence( subset, count, self.f )
+                sentence.cell = "Inferred subset"
+                print( "  sentence:" )
+                print( sentence )
+                self.f.write( "  sentence:" )
+                self.f.write( str( sentence ) )
+                self.f.flush( )
+                self.knowledge.append( sentence )
+            
+
+    def find_and_mark_new_known_cells( self ):
+        print( "\nfind_and_mark_new_known_cells" )
+        self.f.write( "\nfind_and_mark_new_known_cells" )
+        self.f.flush( )
+        new_mines = self.get_new_mines( )
+        new_safes = self.get_new_safes( )
+
+        print( "\nIterating over new safes and mines" )
+        print( f"  self.safes: { self.safes }" )
+        print( f"  self.mines: { self.mines }" )
+        print( f"  new_safes:  { new_safes }" )
+        print( f"  new_mines:  { new_mines }" )
+
+        self.f.write( "\nIterating over new safes and mines" )
+        self.f.write( f"  self.safes: { self.safes }\n" )
+        self.f.write( f"  self.mines: { self.mines }\n" )
+        self.f.write( f"  new_safes:  { new_safes }\n" )
+        self.f.write( f"  new_mines:  { new_mines }\n" )
+        self.f.flush( )
+
+        print( "\nBEFORE WHILE" )
+        self.f.write( "\nBEFORE WHILE" )
+        self.f.flush( )
+        while len( new_safes ) > 0 or len( new_mines ) > 0:
+            for c in new_safes:
+                print( f"\n  safe: { c }" )
+                self.f.write( f"\n  safe: { c }\n" )
+                self.f.flush( )
+                self.safes.add( c )
+                for k in self.knowledge:
+                    k.mark_safe( c )
+
+            for c in new_mines:
+                print( f"\n  mine: { c }" )
+                self.f.write( f"\n  mine: { c }\n" )
+                self.f.flush( )
+                self.mines.add( c )
+                for k in self.knowledge:
+                    k.mark_mine( c )
+
+            print( "Getting new safes and mines:" )
+            self.f.write( "Getting new safes and mines:\n" )
+            self.f.flush( )
+            new_safes = self.get_new_safes( )
+            new_mines = self.get_new_mines( )
+            print( f"  self.safes: { self.safes }" )
+            print( f"  self.mines: { self.mines }" )
+            print( f"  new_safes:  { new_safes }" )
+            print( f"  new_mines:  { new_mines }" )
+
+            self.f.write( f"  self.safes: { self.safes }\n" )
+            self.f.write( f"  self.mines: { self.mines }\n" )
+            self.f.write( f"  new_safes:  { new_safes }\n" )
+            self.f.write( f"  new_mines:  { new_mines }\n" )
+            self.f.flush( )
+
+
+        print( "\nAFTER WHILE\n\n" )
+        self.f.write( "\nAFTER WHILE\n\n" )
+        self.f.flush( )
+
+    def get_new_safes( self ):
+        safes = set( itertools.chain( *[ x.known_safes( ) for x in self.knowledge ] ) )
+        safes -= self.safes
+        return safes
+
+    def get_new_mines( self ):
+        mines = set( itertools.chain( *[ x.known_mines( ) for x in self.knowledge ] ) )
+        mines -= self.mines
+        return mines
+
+    def update_knowledge_with_safe( self, cell ):
+        print( f"\nupdate_knowledge_with_safe:" )
+        print( f"  cell: { cell }" )
+
+        self.f.write( f"\nupdate_knowledge_with_safe:\n" )
+        self.f.write( f"  cell: { cell }\n" )
+        self.f.flush( )
+        for k in self.knowledge:
+            print( f"  k: { k }" )
+            self.f.write( f"  k: { k }\n" )
+            self.f.flush( )
+            k.mark_safe( cell )
+
+
+    def create_new_cells( self, cell, count ):
+        print( "\ncreate_new_cells:" )
+        print( f"  cell:  { cell }" )
+        print( f"  count: { count }" )
+
+        self.f.write( "\ncreate_new_cells:" )
+        self.f.write( f"  cell:  { cell }\n" )
+        self.f.write( f"  count: { count }\n" )
+        self.f.flush( )
+
+        lower_i = cell[ 0 ] - 1
+        upper_i = cell[ 0 ] + 1
+
+        lower_j = cell[ 1 ] - 1
+        upper_j = cell[ 1 ] + 1
+
+        if lower_i < 0:
+            lower_i = 0
+        if upper_i >= self.height:
+            upper_i = self.height - 1
+
+        if lower_j < 0:
+            lower_j = 0
+        if upper_j >= self.width:
+            upper_j = self.width - 1
+
+
+        print( f"  lower_i: { lower_i }" )
+        print( f"  upper_i: { upper_i }" )
+        print( f"  lower_j: { lower_j }" )
+        print( f"  upper_j: { upper_j }" )
+
+        self.f.write( f"  lower_i: { lower_i }\n" )
+        self.f.write( f"  upper_i: { upper_i }\n" )
+        self.f.write( f"  lower_j: { lower_j }\n" )
+        self.f.write( f"  upper_j: { upper_j }\n" )
+        self.f.flush( )
+
+        new_count = count
+        new_cells = set( )
+        for i in range( lower_i, upper_i + 1 ):
+            for j in range( lower_j, upper_j + 1 ):
+                cell = ( i, j )
+                new_cells.add( cell )
+
+        new_cells -= self.safes 
+
+        intersection = new_cells.intersection( self.mines )
+        new_cells -= intersection
+        new_count -= len( intersection )
+
+        return new_cells, new_count
+
 
     def make_safe_move(self):
         """
@@ -193,7 +545,25 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        print( "\nmake_safe_move:" )
+        self.f.write( "\nmake_safe_move:" )
+        self.f.flush( )
+        moves = self.safes - self.moves_made
+        print( f"  moves: { moves }" )
+        self.f.write( f"  moves: { moves }\n" )
+        self.f.flush( )
+        if len( moves ) == 0:
+            print( "  no safe move to make" )
+            self.f.write( "  no safe move to make" )
+            self.f.flush( )
+            return None
+
+        move = list( moves )[ 0 ]
+        print( f"  making move: { move }" )
+        self.f.write( f"  making move: { move }\n" )
+        self.f.flush( )
+
+        return move
 
     def make_random_move(self):
         """
@@ -202,4 +572,50 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        print( "\nmake_random_move:" )
+        print( f"  len( self.moves_made ): { len( self.moves_made ) }" )
+        print( f"  len( self.mines ):      { len( self.mines ) }" )
+        print( f"  used: { len( self.moves_made ) + len( self.mines ) }" )
+        print( f"  height: { self.height }, width: { self.width }, cells: { self.height * self.width }" )
+
+        self.f.write( "\nmake_random_move:\n" )
+        self.f.write( f"  len( self.moves_made ): { len( self.moves_made ) }\n" )
+        self.f.write( f"  len( self.mines ):      { len( self.mines ) }\n" )
+        self.f.write( f"  used: { len( self.moves_made ) + len( self.mines ) }\n" )
+        self.f.write( f"  height: { self.height }, width: { self.width }, cells: { self.height * self.width }\n" )
+        self.f.flush( )
+
+
+        if len( self.moves_made ) + len( self.mines ) == self.height * self.width:
+            return None
+
+        while True:
+            i = random.randrange( self.height )
+            j = random.randrange( self.width )
+            cell = ( i, j )
+            print( f"  cell: { cell }" )
+            self.f.write( f"  cell: { cell }\n" )
+            self.f.flush( )
+            if cell not in self.moves_made and cell not in self.mines:
+                print( f"  making move: { cell }" )
+                self.f.write( f"  making move: { cell }\n" )
+                self.f.flush( )
+                return cell
+
+    def find_knowledge( self, cell ):
+        print( "\n\nfind_knowledge:" )
+        print( f"  cell: { cell }" )
+
+        for k in self.knowledge:
+            if cell in k.cells:
+                print( "  cell in k.cells" )
+                print( k )
+            elif cell in k.safes:
+                print( "  cell in k.safes" )
+                print( k )
+            elif cell in k.mines:
+                print( "  cell in k.mines" )
+                print( k )
+            
+
+
